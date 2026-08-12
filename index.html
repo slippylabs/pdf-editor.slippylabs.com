@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Editor &amp; Signature Signer // pdf-editor.slippylabs.com</title>
+<meta name="description" content="Upload a PDF, sign it with a drawn or uploaded signature, drop in text boxes, delete/reorder pages, and merge multiple PDFs — real embedded PDF objects, entirely in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pdf-editor.slippylabs.com/">
+<meta property="og:title" content="PDF Editor &amp; Signature Signer // pdf-editor.slippylabs.com">
+<meta property="og:description" content="Upload a PDF, sign it with a drawn or uploaded signature, drop in text boxes, delete/reorder pages, and merge multiple PDFs — real embedded PDF objects, entirely in your browser.">
+<meta property="og:image" content="https://pdf-editor.slippylabs.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PDF Editor &amp; Signature Signer // pdf-editor.slippylabs.com">
+<meta name="twitter:description" content="Upload a PDF, sign it with a drawn or uploaded signature, drop in text boxes, delete/reorder pages, and merge multiple PDFs — real embedded PDF objects, entirely in your browser.">
+<meta name="twitter:image" content="https://pdf-editor.slippylabs.com/og-image.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2234%22%20r%3D%2222%22%20fill%3D%22%231c8a52%22%20stroke%3D%22%2339ff8f%22%20stroke-width%3D%222%22%2F%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2216%22%20r%3D%228%22%20fill%3D%22%231c8a52%22%20stroke%3D%22%2339ff8f%22%20stroke-width%3D%222%22%2F%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2216%22%20r%3D%228%22%20fill%3D%22%231c8a52%22%20stroke%3D%22%2339ff8f%22%20stroke-width%3D%222%22%2F%3E%3C%2Fsvg%3E">
+<meta name="theme-color" content="#050b10">
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+
+<div class="starfield"></div>
+<div class="scanlines"></div>
+
+<main class="page-wrap">
+  <div class="hud-panel xwide">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+
+    <div class="callsign-row">
+      <div class="toad-avatar-wrap">
+        <svg class="toad-avatar" width="46" height="46" viewBox="0 0 64 64">
+          <circle cx="32" cy="34" r="22" fill="#1c8a52" stroke="#39ff8f" stroke-width="2"/>
+          <circle cx="20" cy="16" r="8" fill="#1c8a52" stroke="#39ff8f" stroke-width="2"/>
+          <circle cx="44" cy="16" r="8" fill="#1c8a52" stroke="#39ff8f" stroke-width="2"/>
+          <circle cx="20" cy="16" r="3.5" fill="#050b10"/>
+          <circle cx="44" cy="16" r="3.5" fill="#050b10"/>
+          <ellipse cx="24" cy="32" rx="4.5" ry="5.5" fill="#050b10"/>
+          <ellipse cx="40" cy="32" rx="4.5" ry="5.5" fill="#050b10"/>
+          <circle cx="24" cy="30" r="1.4" fill="#39ff8f"/>
+          <circle cx="40" cy="30" r="1.4" fill="#39ff8f"/>
+          <path d="M22 42 Q32 48 42 42" stroke="#050b10" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+        <div class="lock-reticle"></div>
+      </div>
+      <span class="callsign">Workshop Division // Tool</span>
+      <div class="nav-links">
+        <a href="https://projects.slippylabs.com/" class="logout-link">&larr; Archive</a>
+      </div>
+    </div>
+
+    <h1>PDF EDITOR &amp; SIGNATURE SIGNER</h1>
+    <p class="subtitle">Sign, annotate, reorder, and merge PDFs entirely in your browser. Nothing you upload ever leaves this tab — no server, no upload endpoint.</p>
+
+    <div class="tool-controls">
+      <input class="tool-file-input" type="file" id="initial-upload" accept="application/pdf">
+      <span class="pdf-page-indicator" id="doc-summary"></span>
+    </div>
+    <p class="tool-note" id="empty-note">Upload a PDF to get started. Everything below (viewing, signing, text, page management) works once at least one PDF is loaded.</p>
+
+    <div class="filter-bar" id="mode-tabs">
+      <button class="hud-tab active" data-mode="view">View</button>
+      <button class="hud-tab" data-mode="sign">Sign</button>
+      <button class="hud-tab" data-mode="text">Add Text</button>
+      <button class="hud-tab" data-mode="pages">Pages</button>
+    </div>
+
+    <!-- ===================== VIEW ===================== -->
+    <div id="view-panel">
+      <div class="tool-controls" id="view-nav">
+        <button class="tool-btn ghost" id="view-prev">&larr; Prev</button>
+        <span class="pdf-page-indicator" id="view-page-label">Page 0 of 0</span>
+        <button class="tool-btn ghost" id="view-next">Next &rarr;</button>
+      </div>
+      <div class="canvas-frame">
+        <div class="pdf-canvas-wrap" id="canvas-wrap">
+          <canvas id="page-canvas"></canvas>
+          <div class="pdf-overlay-layer" id="overlay-layer"></div>
+        </div>
+      </div>
+      <p class="tool-note">Drag a placed signature or text box to move it, drag its bottom-right handle to resize it, and use the &times; to remove it. Placement is stored relative to the page, so it exports at the exact position shown here.</p>
+    </div>
+
+    <!-- ===================== SIGN ===================== -->
+    <div id="sign-panel" class="hidden">
+      <div class="filter-bar" id="sign-tabs">
+        <button class="hud-tab active" data-signmode="draw">Draw</button>
+        <button class="hud-tab" data-signmode="upload">Upload Image</button>
+      </div>
+
+      <div id="sign-draw-panel">
+        <canvas class="pdf-sign-canvas" id="sign-canvas"></canvas>
+        <div class="tool-controls">
+          <button class="tool-btn ghost" id="sign-undo">Undo Stroke</button>
+          <button class="tool-btn ghost" id="sign-clear">Clear</button>
+          <button class="tool-btn" id="sign-capture">Use This Signature</button>
+        </div>
+      </div>
+
+      <div id="sign-upload-panel" class="hidden">
+        <div class="tool-controls">
+          <input class="tool-file-input" type="file" id="sign-upload-input" accept="image/png,image/jpeg">
+        </div>
+        <p class="tool-note">PNG keeps a transparent background. JPG will show as an opaque rectangle on the page.</p>
+      </div>
+
+      <div id="sign-pending" class="hidden">
+        <p class="tool-field-label">Captured signature</p>
+        <img class="pdf-sig-preview" id="sig-preview-img" alt="Captured signature preview">
+        <div class="tool-controls">
+          <span class="pdf-page-indicator" id="sign-target-page"></span>
+          <button class="tool-btn" id="sign-place">Place On Current Page</button>
+        </div>
+      </div>
+      <p class="tool-note">Signatures are placed on whichever page the View tab is currently showing — switch pages there first, then come back here.</p>
+    </div>
+
+    <!-- ===================== ADD TEXT ===================== -->
+    <div id="text-panel" class="hidden">
+      <div class="tool-field-row">
+        <label class="tool-field-label" for="text-input">Text</label>
+        <input class="tool-text-input" id="text-input" type="text" placeholder="e.g. Jane Doe, 08/12/2026" maxlength="200">
+      </div>
+      <div class="tool-controls">
+        <label class="tool-field-label" for="text-size">Size</label>
+        <select class="tool-select" id="text-size">
+          <option value="10">Small</option>
+          <option value="14" selected>Medium</option>
+          <option value="20">Large</option>
+          <option value="28">X-Large</option>
+        </select>
+        <label class="tool-field-label" for="text-color">Colour</label>
+        <input class="tool-color-input" id="text-color" type="color" value="#111111">
+        <span class="pdf-page-indicator" id="text-target-page"></span>
+        <button class="tool-btn" id="text-add">Add Text Box</button>
+      </div>
+      <p class="tool-note">The text box lands on the page currently shown in the View tab. Double-click a placed text box afterward to edit its wording.</p>
+    </div>
+
+    <!-- ===================== PAGES ===================== -->
+    <div id="pages-panel" class="hidden">
+      <div class="tool-controls">
+        <input class="tool-file-input" type="file" id="merge-upload" accept="application/pdf">
+        <span class="tool-note" style="margin:0;">Add another PDF &mdash; its pages append to the list below for merging.</span>
+      </div>
+      <div class="pdf-page-list" id="page-list"></div>
+      <p class="tool-note">Drag a row to reorder it, or use the arrow buttons (drag-and-drop doesn't work reliably on touch devices). Deleting a page also removes any signature/text placed on it.</p>
+    </div>
+
+    <div class="tool-controls">
+      <button class="tool-btn" id="export-btn">Download Edited PDF</button>
+      <span class="copy-toast" id="export-toast">Building PDF&hellip;</span>
+    </div>
+    <p class="tool-note" id="size-warning-note"></p>
+
+    <div class="comm-window">
+      <div class="comm-portrait">
+        <svg width="36" height="36" viewBox="0 0 64 64">
+          <circle cx="32" cy="34" r="22" fill="#1c8a52" stroke="#39ff8f" stroke-width="2"/>
+          <circle cx="20" cy="16" r="8" fill="#1c8a52" stroke="#39ff8f" stroke-width="2"/>
+          <circle cx="44" cy="16" r="8" fill="#1c8a52" stroke="#39ff8f" stroke-width="2"/>
+          <circle cx="20" cy="16" r="3.5" fill="#050b10"/>
+          <circle cx="44" cy="16" r="3.5" fill="#050b10"/>
+          <ellipse cx="24" cy="32" rx="4.5" ry="5.5" fill="#050b10"/>
+          <ellipse cx="40" cy="32" rx="4.5" ry="5.5" fill="#050b10"/>
+          <circle cx="24" cy="30" r="1.4" fill="#39ff8f"/>
+          <circle cx="40" cy="30" r="1.4" fill="#39ff8f"/>
+          <path d="M22 42 Q32 48 42 42" stroke="#050b10" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="comm-body">
+        <div class="comm-label"><span class="dot"></span> Incoming Transmission &mdash; Slippy</div>
+        <p>"Print it, sign it, scan it back in — or just do it here in about ten seconds."</p>
+      </div>
+    </div>
+
+    <a href="https://projects.slippylabs.com/" class="hud-btn">&larr; Back to Archive</a>
+  </div>
+</main>
+
+<!-- Vendored: pdf-lib v1.17.1 (MIT), https://github.com/Hopding/pdf-lib, unmodified UMD build. -->
+<script src="vendor/pdf-lib/pdf-lib.min.js"></script>
+<!-- Vendored: pdf.js v3.11.174 (Apache-2.0), https://github.com/mozilla/pdf.js, unmodified legacy UMD build. -->
+<script src="vendor/pdfjs/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
+
+// ------------------------------------------------------------------ state
+// sources: registered uploaded files. Each File is read via arrayBuffer()
+// twice (once for pdf.js, once kept raw for pdf-lib at export time) so
+// neither consumer can detach a buffer the other still needs.
+let sources = [];        // { id, name, pdfjsDoc, libBytes: ArrayBuffer, pageCount }
+let pageEntries = [];    // ordered working document: { id, sourceId, originalPageIndex }
+let overlays = {};       // pageEntryId -> array of overlay objects
+let currentEntryIndex = 0;
+let currentMode = 'view';
+let pendingSignature = null; // { bytes: Uint8Array, format: 'png'|'jpg', width, height }
+const thumbCache = {};   // `${sourceId}:${pageIdx}` -> dataURL
+
+function uid() {
+  return crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now();
+}
+
+// -------------------------------------------------------------- utilities
+function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
+function findSource(sourceId) { return sources.find(s => s.id === sourceId); }
+
+async function readPdfFile(file) {
+  const bytesForPdfjs = await file.arrayBuffer();
+  const bytesForLib = await file.arrayBuffer();
+  const pdfjsDoc = await pdfjsLib.getDocument({ data: bytesForPdfjs }).promise;
+  return { id: uid(), name: file.name, pdfjsDoc, libBytes: bytesForLib, pageCount: pdfjsDoc.numPages };
+}
+
+async function addSource(file, { asNewDocument }) {
+  if (!file) return;
+  if (file.type && file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    alert('That file does not look like a PDF.');
+    return;
+  }
+  let source;
+  try {
+    source = await readPdfFile(file);
+  } catch (err) {
+    alert('Could not read that PDF: ' + err.message);
+    return;
+  }
+  sources.push(source);
+  if (asNewDocument) {
+    pageEntries = [];
+    overlays = {};
+    currentEntryIndex = 0;
+  }
+  for (let i = 0; i < source.pageCount; i++) {
+    pageEntries.push({ id: uid(), sourceId: source.id, originalPageIndex: i });
+  }
+  checkSizeWarning(file);
+  renderAll();
+}
+
+function checkSizeWarning(file) {
+  const note = document.getElementById('size-warning-note');
+  const bigFile = file.size > 50 * 1024 * 1024;
+  const bigCount = pageEntries.length > 200;
+  if (bigFile || bigCount) {
+    note.textContent = 'Heads up: this is a large document (' + (bigFile ? Math.round(file.size / 1024 / 1024) + ' MB' : pageEntries.length + ' pages') + '). Everything runs in this browser tab, so very large PDFs can get slow or hit memory limits.';
+    note.classList.add('pdf-warn');
+  }
+}
+
+// ------------------------------------------------------------ page render
+async function getPdfjsPage(entry) {
+  const source = findSource(entry.sourceId);
+  return source.pdfjsDoc.getPage(entry.originalPageIndex + 1); // pdf.js is 1-indexed
+}
+
+let renderToken = 0;
+let activeRenderTask = null;
+async function renderCurrentPage() {
+  const canvas = document.getElementById('page-canvas');
+  const label = document.getElementById('view-page-label');
+
+  // pdf.js refuses a second render() on the same canvas while one is still
+  // in flight (e.g. a delete immediately followed by a merge). Cancel any
+  // outstanding task first — cancellation rejects its promise, which we
+  // must swallow, not treat as a real error.
+  if (activeRenderTask) {
+    try { activeRenderTask.cancel(); } catch (e) { /* already finished */ }
+    activeRenderTask = null;
+  }
+
+  if (pageEntries.length === 0) {
+    canvas.width = 0;
+    canvas.height = 0;
+    label.textContent = 'Page 0 of 0';
+    renderOverlayItems();
+    return;
+  }
+  currentEntryIndex = clamp(currentEntryIndex, 0, pageEntries.length - 1);
+  const entry = pageEntries[currentEntryIndex];
+  const page = await getPdfjsPage(entry);
+  const myToken = ++renderToken;
+
+  const containerWidth = document.querySelector('.canvas-frame').clientWidth - 24;
+  const baseViewport = page.getViewport({ scale: 1 });
+  const scale = clamp((containerWidth || 900) / baseViewport.width, 0.3, 2.5);
+  const viewport = page.getViewport({ scale });
+
+  canvas.width = Math.ceil(viewport.width);
+  canvas.height = Math.ceil(viewport.height);
+  const ctx = canvas.getContext('2d');
+  const task = page.render({ canvasContext: ctx, viewport });
+  activeRenderTask = task;
+  try {
+    await task.promise;
+  } catch (err) {
+    if (err && err.name === 'RenderingCancelledException') return; // superseded by a newer render
+    throw err;
+  } finally {
+    if (activeRenderTask === task) activeRenderTask = null;
+  }
+  if (myToken !== renderToken) return; // a newer render started while this one was in flight
+
+  label.textContent = 'Page ' + (currentEntryIndex + 1) + ' of ' + pageEntries.length;
+  document.getElementById('sign-target-page').textContent = 'Target: page ' + (currentEntryIndex + 1);
+  document.getElementById('text-target-page').textContent = 'Target: page ' + (currentEntryIndex + 1);
+  renderOverlayItems();
+}
+
+// ---------------------------------------------------------- overlay items
+function currentEntry() { return pageEntries[currentEntryIndex]; }
+
+function overlaysForCurrentEntry() {
+  const entry = currentEntry();
+  if (!entry) return [];
+  if (!overlays[entry.id]) overlays[entry.id] = [];
+  return overlays[entry.id];
+}
+
+function renderOverlayItems() {
+  const layer = document.getElementById('overlay-layer');
+  layer.textContent = '';
+  const canvas = document.getElementById('page-canvas');
+  if (!canvas.width) return;
+  const list = overlaysForCurrentEntry();
+  for (const ov of list) {
+    layer.appendChild(buildOverlayEl(ov));
+  }
+}
+
+function buildOverlayEl(ov) {
+  const el = document.createElement('div');
+  el.className = 'pdf-overlay-item ' + (ov.type === 'image' ? 'pdf-overlay-image' : 'pdf-overlay-text');
+  el.style.left = (ov.xFrac * 100) + '%';
+  el.style.top = (ov.yFrac * 100) + '%';
+  el.style.width = (ov.wFrac * 100) + '%';
+  el.style.height = (ov.hFrac * 100) + '%';
+
+  if (ov.type === 'image') {
+    el.style.backgroundImage = 'url(' + ov.previewUrl + ')';
+  } else {
+    el.style.setProperty('--pdf-text-color', ov.color);
+    el.style.fontSize = ov.previewFontPx + 'px';
+    el.textContent = ov.text;
+    el.title = 'Double-click to edit text';
+    el.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      const next = prompt('Edit text:', ov.text);
+      if (next !== null && next.trim() !== '') {
+        ov.text = next;
+        el.textContent = next;
+      }
+    });
+  }
+
+  const handle = document.createElement('div');
+  handle.className = 'pdf-overlay-handle';
+  el.appendChild(handle);
+
+  const remove = document.createElement('div');
+  remove.className = 'pdf-overlay-remove';
+  remove.textContent = '×';
+  remove.addEventListener('pointerdown', (e) => e.stopPropagation());
+  remove.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const list = overlaysForCurrentEntry();
+    const idx = list.indexOf(ov);
+    if (idx !== -1) list.splice(idx, 1);
+    renderOverlayItems();
+  });
+  el.appendChild(remove);
+
+  wireOverlayDrag(el, handle, ov);
+  return el;
+}
+
+function wireOverlayDrag(el, handle, ov) {
+  el.addEventListener('pointerdown', (e) => {
+    if (e.target === handle) return;
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+    const wrapRect = document.getElementById('canvas-wrap').getBoundingClientRect();
+    const startX = e.clientX, startY = e.clientY;
+    const startLeftFrac = ov.xFrac, startTopFrac = ov.yFrac;
+
+    function onMove(ev) {
+      const dxFrac = (ev.clientX - startX) / wrapRect.width;
+      const dyFrac = (ev.clientY - startY) / wrapRect.height;
+      ov.xFrac = clamp(startLeftFrac + dxFrac, 0, 1 - ov.wFrac);
+      ov.yFrac = clamp(startTopFrac + dyFrac, 0, 1 - ov.hFrac);
+      el.style.left = (ov.xFrac * 100) + '%';
+      el.style.top = (ov.yFrac * 100) + '%';
+    }
+    function onUp(ev) {
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
+    }
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+  });
+
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handle.setPointerCapture(e.pointerId);
+    const wrapRect = document.getElementById('canvas-wrap').getBoundingClientRect();
+    const startX = e.clientX, startY = e.clientY;
+    const startWFrac = ov.wFrac, startHFrac = ov.hFrac;
+    const minFrac = 0.02;
+
+    function onMove(ev) {
+      const dwFrac = (ev.clientX - startX) / wrapRect.width;
+      const dhFrac = (ev.clientY - startY) / wrapRect.height;
+      ov.wFrac = clamp(startWFrac + dwFrac, minFrac, 1 - ov.xFrac);
+      ov.hFrac = clamp(startHFrac + dhFrac, minFrac, 1 - ov.yFrac);
+      el.style.width = (ov.wFrac * 100) + '%';
+      el.style.height = (ov.hFrac * 100) + '%';
+      if (ov.type === 'text') {
+        el.style.fontSize = pxFromHFrac(ov.hFrac) + 'px';
+      }
+    }
+    function onUp(ev) {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      if (ov.type === 'text') ov.previewFontPx = pxFromHFrac(ov.hFrac);
+    }
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+  });
+}
+
+function pxFromHFrac(hFrac) {
+  const canvas = document.getElementById('page-canvas');
+  return Math.max(8, Math.round(hFrac * canvas.height * 0.72));
+}
+
+// -------------------------------------------------------------- sign pad
+const signCanvas = document.getElementById('sign-canvas');
+const signCtx = signCanvas.getContext('2d');
+let strokes = [];
+let currentStroke = null;
+
+function setupSignCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = signCanvas.getBoundingClientRect();
+  signCanvas.width = Math.round(rect.width * dpr);
+  signCanvas.height = Math.round(rect.height * dpr);
+  signCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  redrawSign();
+}
+
+function redrawSign() {
+  const rect = signCanvas.getBoundingClientRect();
+  signCtx.clearRect(0, 0, rect.width, rect.height);
+  signCtx.lineWidth = 2.4;
+  signCtx.lineCap = 'round';
+  signCtx.lineJoin = 'round';
+  signCtx.strokeStyle = '#111111';
+  for (const stroke of strokes) {
+    if (stroke.length < 2) continue;
+    signCtx.beginPath();
+    signCtx.moveTo(stroke[0].x, stroke[0].y);
+    for (let i = 1; i < stroke.length; i++) signCtx.lineTo(stroke[i].x, stroke[i].y);
+    signCtx.stroke();
+  }
+}
+
+signCanvas.addEventListener('pointerdown', (e) => {
+  signCanvas.setPointerCapture(e.pointerId);
+  const rect = signCanvas.getBoundingClientRect();
+  currentStroke = [{ x: e.clientX - rect.left, y: e.clientY - rect.top }];
+  strokes.push(currentStroke);
+});
+signCanvas.addEventListener('pointermove', (e) => {
+  if (!currentStroke) return;
+  const rect = signCanvas.getBoundingClientRect();
+  currentStroke.push({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  redrawSign();
+});
+function endStroke() { currentStroke = null; }
+signCanvas.addEventListener('pointerup', endStroke);
+signCanvas.addEventListener('pointercancel', endStroke);
+
+document.getElementById('sign-undo').addEventListener('click', () => {
+  strokes.pop();
+  redrawSign();
+});
+document.getElementById('sign-clear').addEventListener('click', () => {
+  strokes = [];
+  redrawSign();
+});
+
+// crops the signed strokes to their bounding box (plus a small margin) so
+// the exported PNG isn't mostly transparent padding, which would otherwise
+// distort the aspect ratio of the placed overlay.
+function cropSignatureCanvas() {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const stroke of strokes) {
+    for (const p of stroke) {
+      minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+    }
+  }
+  if (!isFinite(minX)) return null;
+  const margin = 8;
+  const rect = signCanvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  minX = Math.max(0, minX - margin); minY = Math.max(0, minY - margin);
+  maxX = Math.min(rect.width, maxX + margin); maxY = Math.min(rect.height, maxY + margin);
+  const w = maxX - minX, h = maxY - minY;
+  const out = document.createElement('canvas');
+  out.width = Math.round(w * dpr);
+  out.height = Math.round(h * dpr);
+  const octx = out.getContext('2d');
+  octx.drawImage(signCanvas, minX * dpr, minY * dpr, w * dpr, h * dpr, 0, 0, out.width, out.height);
+  return out;
+}
+
+document.getElementById('sign-capture').addEventListener('click', async () => {
+  const cropped = cropSignatureCanvas();
+  if (!cropped) { alert('Draw a signature first.'); return; }
+  const blob = await new Promise(res => cropped.toBlob(res, 'image/png'));
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  setPendingSignature(bytes, 'png', cropped.width, cropped.height);
+});
+
+document.getElementById('sign-upload-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const format = file.type === 'image/png' ? 'png' : 'jpg';
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const dims = await imageDimensions(file);
+  setPendingSignature(bytes, format, dims.width, dims.height);
+});
+
+function imageDimensions(file) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function setPendingSignature(bytes, format, width, height) {
+  const blob = new Blob([bytes], { type: format === 'png' ? 'image/png' : 'image/jpeg' });
+  const url = URL.createObjectURL(blob);
+  pendingSignature = { bytes, format, width, height, previewUrl: url };
+  document.getElementById('sig-preview-img').src = url;
+  document.getElementById('sign-pending').classList.remove('hidden');
+}
+
+document.getElementById('sign-place').addEventListener('click', () => {
+  if (!pendingSignature || pageEntries.length === 0) return;
+  const aspect = pendingSignature.width / pendingSignature.height;
+  const wFrac = 0.28;
+  const canvas = document.getElementById('page-canvas');
+  const hFrac = (wFrac * canvas.width) / aspect / canvas.height;
+  const ov = {
+    id: uid(),
+    type: 'image',
+    xFrac: 0.36, yFrac: 0.44, wFrac, hFrac,
+    bytes: pendingSignature.bytes,
+    format: pendingSignature.format,
+    previewUrl: pendingSignature.previewUrl,
+  };
+  overlaysForCurrentEntry().push(ov);
+  renderOverlayItems();
+});
+
+// -------------------------------------------------------------- add text
+document.getElementById('text-add').addEventListener('click', () => {
+  const text = document.getElementById('text-input').value.trim();
+  if (!text) { alert('Type some text first.'); return; }
+  if (pageEntries.length === 0) return;
+  const fontSizePt = parseInt(document.getElementById('text-size').value, 10);
+  const color = document.getElementById('text-color').value;
+  const canvas = document.getElementById('page-canvas');
+  const hFrac = (fontSizePt * 1.5) / canvas.height; // box height, generous for descenders
+  const wFrac = clamp((text.length * fontSizePt * 0.62) / canvas.width, 0.06, 0.9);
+  const ov = {
+    id: uid(),
+    type: 'text',
+    xFrac: 0.1, yFrac: 0.1, wFrac, hFrac,
+    text, fontSizePt, color,
+    previewFontPx: Math.round(hFrac * canvas.height * 0.72),
+  };
+  overlaysForCurrentEntry().push(ov);
+  renderOverlayItems();
+});
+
+// --------------------------------------------------------------- pages UI
+function thumbKey(sourceId, pageIdx) { return sourceId + ':' + pageIdx; }
+
+async function getThumb(entry) {
+  const key = thumbKey(entry.sourceId, entry.originalPageIndex);
+  if (thumbCache[key]) return thumbCache[key];
+  const page = await getPdfjsPage(entry);
+  const viewport = page.getViewport({ scale: 1 });
+  const scale = 60 / viewport.width;
+  const scaledViewport = page.getViewport({ scale });
+  const c = document.createElement('canvas');
+  c.width = Math.ceil(scaledViewport.width);
+  c.height = Math.ceil(scaledViewport.height);
+  await page.render({ canvasContext: c.getContext('2d'), viewport: scaledViewport }).promise;
+  const url = c.toDataURL('image/png');
+  thumbCache[key] = url;
+  return url;
+}
+
+async function renderPageList() {
+  const host = document.getElementById('page-list');
+  host.textContent = '';
+  for (let i = 0; i < pageEntries.length; i++) {
+    const entry = pageEntries[i];
+    const source = findSource(entry.sourceId);
+    const row = document.createElement('div');
+    row.className = 'pdf-thumb' + (i === currentEntryIndex ? ' selected' : '');
+    row.draggable = true;
+    row.dataset.index = String(i);
+
+    const img = document.createElement('img');
+    getThumb(entry).then(url => { img.src = url; });
+    row.appendChild(img);
+
+    const label = document.createElement('div');
+    label.className = 'pdf-thumb-label';
+    label.textContent = (sources.length > 1 ? source.name + ' — ' : '') + 'p.' + (entry.originalPageIndex + 1);
+    row.appendChild(label);
+
+    const actions = document.createElement('div');
+    actions.className = 'pdf-thumb-actions';
+
+    const up = document.createElement('button');
+    up.textContent = '↑';
+    up.title = 'Move up';
+    up.addEventListener('click', () => { movePage(i, i - 1); });
+    actions.appendChild(up);
+
+    const down = document.createElement('button');
+    down.textContent = '↓';
+    down.title = 'Move down';
+    down.addEventListener('click', () => { movePage(i, i + 1); });
+    actions.appendChild(down);
+
+    const del = document.createElement('button');
+    del.textContent = '×';
+    del.className = 'pdf-thumb-delete';
+    del.title = 'Delete page';
+    del.addEventListener('click', () => { deletePage(i); });
+    actions.appendChild(del);
+
+    row.appendChild(actions);
+
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.pdf-thumb-actions')) return;
+      currentEntryIndex = i;
+      renderAll();
+    });
+
+    row.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', String(i));
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag-over'); });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      movePage(fromIndex, i);
+    });
+
+    host.appendChild(row);
+  }
+}
+
+function movePage(fromIndex, toIndex) {
+  if (toIndex < 0 || toIndex >= pageEntries.length || fromIndex === toIndex) return;
+  const [entry] = pageEntries.splice(fromIndex, 1);
+  pageEntries.splice(toIndex, 0, entry);
+  if (currentEntryIndex === fromIndex) currentEntryIndex = toIndex;
+  renderAll();
+}
+
+function deletePage(index) {
+  const entry = pageEntries[index];
+  delete overlays[entry.id];
+  pageEntries.splice(index, 1);
+  if (currentEntryIndex >= pageEntries.length) currentEntryIndex = Math.max(0, pageEntries.length - 1);
+  renderAll();
+}
+
+document.getElementById('merge-upload').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  await addSource(file, { asNewDocument: false });
+});
+
+// -------------------------------------------------------------- tab wiring
+document.getElementById('mode-tabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.hud-tab');
+  if (!btn) return;
+  document.getElementById('mode-tabs').querySelectorAll('.hud-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  currentMode = btn.dataset.mode;
+  document.getElementById('view-panel').classList.toggle('hidden', currentMode !== 'view');
+  document.getElementById('sign-panel').classList.toggle('hidden', currentMode !== 'sign');
+  document.getElementById('text-panel').classList.toggle('hidden', currentMode !== 'text');
+  document.getElementById('pages-panel').classList.toggle('hidden', currentMode !== 'pages');
+  if (currentMode === 'sign') setupSignCanvas();
+  if (currentMode === 'pages') renderPageList();
+});
+
+document.getElementById('sign-tabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.hud-tab');
+  if (!btn) return;
+  document.getElementById('sign-tabs').querySelectorAll('.hud-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const drawMode = btn.dataset.signmode === 'draw';
+  document.getElementById('sign-draw-panel').classList.toggle('hidden', !drawMode);
+  document.getElementById('sign-upload-panel').classList.toggle('hidden', drawMode);
+  if (drawMode) setupSignCanvas();
+});
+
+document.getElementById('view-prev').addEventListener('click', () => {
+  if (currentEntryIndex > 0) { currentEntryIndex--; renderAll(); }
+});
+document.getElementById('view-next').addEventListener('click', () => {
+  if (currentEntryIndex < pageEntries.length - 1) { currentEntryIndex++; renderAll(); }
+});
+
+document.getElementById('initial-upload').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  await addSource(file, { asNewDocument: true });
+});
+
+// ---------------------------------------------------------------- render
+function renderAll() {
+  const hasDoc = pageEntries.length > 0;
+  document.getElementById('empty-note').classList.toggle('hidden', hasDoc);
+  document.getElementById('doc-summary').textContent = hasDoc
+    ? sources.length + (sources.length === 1 ? ' file, ' : ' files, ') + pageEntries.length + ' page' + (pageEntries.length === 1 ? '' : 's')
+    : '';
+  renderCurrentPage();
+  if (currentMode === 'pages') renderPageList();
+}
+
+// ---------------------------------------------------------------- export
+// PDF space is bottom-left-origin and measured in points; the preview
+// canvas / overlay layer is top-left-origin measured in fractions of the
+// page box. pdfY = pageHeight - (yFrac * pageHeight) - boxHeight flips one
+// into the other. drawImage's y is the box's bottom-left corner already;
+// drawText's y is the text BASELINE, so it needs an additional ascent
+// offset subtracted from the top of the box.
+async function buildExportedPdf() {
+  const outDoc = await PDFLib.PDFDocument.create();
+  const libDocCache = {};
+  for (const source of sources) {
+    if (pageEntries.some(e => e.sourceId === source.id)) {
+      libDocCache[source.id] = await PDFLib.PDFDocument.load(source.libBytes);
+    }
+  }
+  let helveticaFont = null;
+
+  for (const entry of pageEntries) {
+    const srcLibDoc = libDocCache[entry.sourceId];
+    const [copiedPage] = await outDoc.copyPages(srcLibDoc, [entry.originalPageIndex]);
+    outDoc.addPage(copiedPage);
+    const { width: pw, height: ph } = copiedPage.getSize();
+    const pageOverlays = overlays[entry.id] || [];
+
+    for (const ov of pageOverlays) {
+      const boxWidthPt = ov.wFrac * pw;
+      const boxHeightPt = ov.hFrac * ph;
+      const xPt = ov.xFrac * pw;
+      const yPt = ph - (ov.yFrac * ph) - boxHeightPt; // bottom-left of the box
+
+      if (ov.type === 'image') {
+        const img = ov.format === 'png'
+          ? await outDoc.embedPng(ov.bytes)
+          : await outDoc.embedJpg(ov.bytes);
+        copiedPage.drawImage(img, { x: xPt, y: yPt, width: boxWidthPt, height: boxHeightPt });
+      } else {
+        if (!helveticaFont) helveticaFont = await outDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const rgb = hexToRgb01(ov.color);
+        const ascent = helveticaFont.heightAtSize(ov.fontSizePt, { descender: false });
+        const baselineY = (yPt + boxHeightPt) - ascent; // top of box minus the font's ascent
+        copiedPage.drawText(ov.text, {
+          x: xPt,
+          y: baselineY,
+          size: ov.fontSizePt,
+          font: helveticaFont,
+          color: PDFLib.rgb(rgb.r, rgb.g, rgb.b),
+        });
+      }
+    }
+  }
+  return outDoc.save();
+}
+
+function hexToRgb01(hex) {
+  const h = hex.replace('#', '');
+  return {
+    r: parseInt(h.slice(0, 2), 16) / 255,
+    g: parseInt(h.slice(2, 4), 16) / 255,
+    b: parseInt(h.slice(4, 6), 16) / 255,
+  };
+}
+
+document.getElementById('export-btn').addEventListener('click', async () => {
+  if (pageEntries.length === 0) { alert('Upload a PDF first.'); return; }
+  const toast = document.getElementById('export-toast');
+  toast.classList.add('show');
+  try {
+    const bytes = await buildExportedPdf();
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (sources[0] ? sources[0].name.replace(/\.pdf$/i, '') : 'document') + '-edited.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch (err) {
+    alert('Could not build the PDF: ' + err.message);
+  } finally {
+    setTimeout(() => toast.classList.remove('show'), 1200);
+  }
+});
+
+window.addEventListener('resize', () => { if (pageEntries.length) renderCurrentPage(); });
+
+renderAll();
+</script>
+</body>
+</html>
