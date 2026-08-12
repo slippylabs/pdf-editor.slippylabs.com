@@ -400,6 +400,7 @@ function wireOverlayDrag(el, handle, ov) {
     function onUp(ev) {
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerup', onUp);
+      el.releasePointerCapture(e.pointerId);
     }
     el.addEventListener('pointermove', onMove);
     el.addEventListener('pointerup', onUp);
@@ -428,6 +429,7 @@ function wireOverlayDrag(el, handle, ov) {
     function onUp(ev) {
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup', onUp);
+      handle.releasePointerCapture(e.pointerId);
       if (ov.type === 'text') ov.previewFontPx = pxFromHFrac(ov.hFrac);
     }
     handle.addEventListener('pointermove', onMove);
