@@ -2,7 +2,9 @@
 
 Upload a PDF, sign it with a drawn or uploaded signature, drop in text boxes, delete/reorder pages, and merge multiple PDFs — real embedded PDF objects, entirely in your browser.
 
-**Live:** <https://pdf-editor.slippylabs.com/>
+> **Archived 2026-10-13.** PdfCraft replaced this tool; the old address now
+> redirects to <https://pdfcraft.slippylabs.com/>. The code still runs locally
+> as described below.
 
 ## What it does
 
@@ -44,5 +46,4 @@ This is the one tool here with third-party code, and it is **vendored, not loade
 
 ---
 
-Part of [Slippy Labs](https://slippylabs.com). Every tool is indexed at
-[projects.slippylabs.com](https://projects.slippylabs.com).
+Part of [Slippy Labs](https://slippylabs.com).
